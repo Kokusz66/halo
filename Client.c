@@ -22,20 +22,28 @@ int main(int argc, char *argv[] ){
   char langResponseBuffer[BUFSIZE];
   char voteResponseBuffer[BUFSIZE];
   char server_addr[16];
+  char on = 1;
+  int ip;
   int connection_status;
   int message;
   int answearMessage;
   int reactionMessage;
   int voteMessage;
   char server_response[BUFSIZE];
+  char server_greatingResponse[BUFSIZE];
   char server_langChoose[BUFSIZE];
   char server_voteResponse[BUFSIZE];
 
+  //This makes the first argument the server IP to connect to
+  sprintf(server_addr, "%s", argv[1]);
+  ip = inet_addr(server_addr);
+
+
   //specify an address for the socket
-  struct sockaddr_in server_address;
-  server_address.sin_family = AF_INET;
-  server_address.sin_port = htons(PORT_NO); //htons converts normal looking port to some C magic
-  server_address.sin_addr.s_addr = INADDR_ANY;
+  struct sockaddr_in server;
+  server.sin_family = AF_INET;
+  server.sin_port = htons(PORT_NO);
+  server.sin_addr.s_addr = ip;
 
   //create a socket
   network_socket = socket(AF_INET, SOCK_STREAM, 0); //(domain, type, protocoll)
@@ -45,12 +53,12 @@ int main(int argc, char *argv[] ){
     exit(1);
   }
 
-  //This makes the first argument the server IP to connect to
-  sprintf(server_addr, "%s", argv[1]);
-  inet_addr(server_addr);
+  //setting socket option
+  setsockopt(network_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof on);
 
+  
   //Connect to server
-  connection_status = connect(network_socket, (struct sockaddr *) &server_address,sizeof(server_address));
+  connection_status = connect(network_socket, (struct sockaddr *) &server,sizeof(server));
 
   //Check for error with the connection
   if(connection_status == -1){
@@ -68,21 +76,21 @@ int main(int argc, char *argv[] ){
   printf("Answear: ");
   fgets(langResponseBuffer, BUFSIZE, stdin);
   answearMessage=send(network_socket, langResponseBuffer, BUFSIZE,0);
-  //if this is Client2 it will skip the writing part of the endless loop in the first cycle
-  //so it will just print Client1's message
+  //if this is Client2 this send us to the second while loop
   if (strstr(server_response, "Hello Client2") != NULL){
     goto kliens2_kezdete;
   }
 
-  //Chatting starts here
   while(1){
+
+    //Recieve the vote message from server
     recv(network_socket, &server_voteResponse, sizeof(server_voteResponse), 0);
     printf("The server sent the following message! :\n%s\n", server_voteResponse);
     fgets(voteResponseBuffer, BUFSIZE, stdin);
     voteMessage = send(network_socket, voteResponseBuffer, BUFSIZE, 0);
     recv(network_socket, &server_voteResponse, sizeof(server_voteResponse), 0);
     if (strstr(server_voteResponse, "The conversation is over!") != NULL){
-      printf("%s",server_voteResponse);
+      
       break;
       
     }
@@ -90,7 +98,8 @@ int main(int argc, char *argv[] ){
       printf("%s",server_voteResponse);
     }
     
-    printf("Reagálás:ASDASDASD ");
+    //Chatting starts here
+    printf("Reagálás: ");
     fgets(reactionBuffer,REACTION_BUFSIZE,stdin);
     reactionMessage=send(network_socket, reactionBuffer, REACTION_BUFSIZE,0);
     if(message < 0) {
@@ -98,11 +107,11 @@ int main(int argc, char *argv[] ){
        exit(3);
     }
 
-    //Client's message
+    //Client1's message
     printf("Your message: "); //UI
     fgets(buffer,BUFSIZE,stdin); //Get input from standard input
 
-    //Send a message
+    //Send the message
     message = send(network_socket, buffer, BUFSIZE, 0);
     if(message < 0) {
        fprintf(stderr, "Can't send messageLEL\n");
@@ -110,7 +119,7 @@ int main(int argc, char *argv[] ){
     }
     
     //Recive message from the server
-    //recv(network_socket, &server_response, sizeof(server_response), 0);
+  
     recv(network_socket, &server_response, sizeof(server_response), 0);
     printf("The other client sent the following reaction: \n\n%s\n", server_response);
 
@@ -122,15 +131,18 @@ int main(int argc, char *argv[] ){
    
   }
 
-     while(1){
-  kliens2_kezdete://goto label
+    while(1){
 
-    if (strstr(server_response, "Hello Client1") != NULL){
+    //Client2 starts here
+    kliens2_kezdete:
+
+    //If everybody voted "yes" this loop also end;
+    if (strstr(server_voteResponse, "The conversation is over!") != NULL){
+    printf("%s\n",server_voteResponse);
     break;
     } 
 
-    printf("Hello client 2!!!!!\n");
-  
+    //Recieve the vote message from server
     recv(network_socket, &server_voteResponse, sizeof(server_voteResponse), 0);
     printf("The server sent the following message! :\n%s\n", server_voteResponse);
     fgets(voteResponseBuffer, BUFSIZE, stdin);
@@ -145,7 +157,7 @@ int main(int argc, char *argv[] ){
       printf("%s",server_voteResponse);
     }
 
-    
+    //Recive message from the server
     recv(network_socket, &server_response, sizeof(server_response), 0);
     printf("The other client sent the following reaction: \n\n%s\n", server_response);
 
@@ -162,11 +174,11 @@ int main(int argc, char *argv[] ){
        exit(3);
     }
 
-    //Client's message
+    //Client2's message
     printf("Your message: "); //UI
     fgets(buffer,BUFSIZE,stdin); //Get input from standard input
 
-    //Send a message
+    //Send the message
     message = send(network_socket, buffer, BUFSIZE, 0);
     if(message < 0) {
        fprintf(stderr, "Can't send message\n");

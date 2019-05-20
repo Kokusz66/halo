@@ -18,8 +18,10 @@ int main(int argc, char *argv[] ){
   int server_socket;
   int client_socket;
   int client_socket2;
+  
+
+  char on = 1;
   char buffer[BUFSIZE];
-  char resposneBuffer[BUFSIZE];
   char server_message[BUFSIZE] = "Hello Client1";
   char server_message2[BUFSIZE] = "Hello Client2";
   char server_langChoose[BUFSIZE]= "Choose language: magyar or MAGYAR?";
@@ -33,16 +35,20 @@ int main(int argc, char *argv[] ){
   char vote_response[BUFSIZE];
   char vote_response2[BUFSIZE];
   int message;
-  int reactionMessage;
-  int tag, count;
+
+
 
   //specify the server adress
-  struct sockaddr_in server_adress;
-  struct sockaddr_in client;
-  struct sockaddr_in client2;
+  struct sockaddr_in server_adress;  //socket name (addr) of server
+  struct sockaddr_in client;         //socket name of client
+  struct sockaddr_in client2;        //socekt name of client
   server_adress.sin_family = AF_INET;
   server_adress.sin_port = htons(PORT_NO);
   server_adress.sin_addr.s_addr = INADDR_ANY;
+
+  int server_size = sizeof server_adress;
+  int client_size = sizeof client_socket;
+  int client_size2 = sizeof client_socket2;
 
   //create a server socket
   server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -53,6 +59,8 @@ int main(int argc, char *argv[] ){
 
   //UI
   printf("Server initialized on port %i\n",PORT_NO);
+
+  setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof on);
 
   //bind the socket to our specified IP and port
   bind(server_socket, (struct sockaddr *) &server_adress, sizeof(server_adress));
@@ -68,7 +76,7 @@ int main(int argc, char *argv[] ){
 
 
   //Accept the first client
-  client_socket = accept(server_socket, NULL, NULL);
+  client_socket = accept(server_socket, (struct sockaddr *) &client, &client_size);
   if (server_socket < 0) {
      fprintf(stderr, "Can't accept socket\n");
      exit(4);
@@ -79,12 +87,12 @@ int main(int argc, char *argv[] ){
   //send the question message
   send(client_socket, server_langChoose, sizeof(server_langChoose), 0);
   printf("Question sent to Client1\n");
-  
+  //recieve the answear
   recv(client_socket, client_langResponse, sizeof(client_langResponse),0);
 
 
   //accept the second client
-  client_socket2 = accept(server_socket, NULL, NULL);
+  client_socket2 = accept(server_socket, (struct sockaddr *) &client2, &client_size2);
   if (server_socket < 0) {
      fprintf(stderr, "Can't accept socket\n");
      exit(4);
@@ -95,37 +103,35 @@ int main(int argc, char *argv[] ){
   //send the question message
   send(client_socket2, server_langChoose, sizeof(server_langChoose), 0);
   printf("Question sent to Client2\n");
-
+  //recieve the answear
   recv(client_socket2, client_langResponse2, sizeof(client_langResponse2),0);
 
   if((strstr(client_langResponse, "magyar")!= NULL) ){
         printf("Client1 choosed: magyar\n" );
-      }
-  if((strstr(client_langResponse, "MAGYAR")!= NULL)){
+
+      }else if((strstr(client_langResponse, "MAGYAR")!= NULL)){
         printf("Client1 choosed: MAGYAR\n");
-        }
-  if((strstr(client_langResponse2, "magyar") != NULL)){
+
+        }else if((strstr(client_langResponse2, "magyar") != NULL)){
           printf("Client2 choosed: magyar\n");
+        }else{
+          printf("Client2 choosed: MAGYAR\n");
         }
-  else{
-    printf("Client2 choosed: MAGYAR\n");
-      }
-  
   
 
-  //Chatting starts here
   while(1){
 
+    //send the vote massage to the clients
     send(client_socket, vote_message, sizeof(vote_message), 0);
     printf("Vote message sent to Client1!\n");
     send(client_socket2, vote_message, sizeof(vote_message), 0);
     printf("Vote message sent to Client2!\n");
-
+    //recieve the answear
     recv(client_socket, vote_response, sizeof(vote_response), 0);
     recv(client_socket2, vote_response2, sizeof(vote_response2), 0);
 
     if((strstr(vote_response, "igen") != NULL) && (strstr(vote_response2, "igen") != NULL)){
-      printf("The conversation is over!\n");
+      printf("Everybody voted yes, the conversation is over!\n\n");
 
 
       message = send(client_socket2, "The conversation is over!\n", BUFSIZE, 0);
@@ -141,7 +147,7 @@ int main(int argc, char *argv[] ){
       break;
 
     }else if((strstr(vote_response, "nem") != NULL) && (strstr(vote_response2, "nem") != NULL)){
-      printf("The conversation continuesEZKELL!\n");
+      printf("Nobody wants to finish the conversation, so the conversation continues!\n\n");
 
       message = send(client_socket2, "The conversation continues!\n", BUFSIZE, 0);
       if(message < 0) {
@@ -155,7 +161,7 @@ int main(int argc, char *argv[] ){
       }
       
     }else if((strstr(vote_response, "tartozkodom") != NULL) && (strstr(vote_response2, "tartozkodom") != NULL)){
-      printf("The conversation continuesASDa!\n");
+      printf("Nobody has decision, so the conversation continues!\n");
 
       message = send(client_socket2, "The conversation continues!\n", BUFSIZE, 0);
       if(message < 0) {
@@ -168,7 +174,7 @@ int main(int argc, char *argv[] ){
          exit(5);
       }
     }else{
-      printf("The conversation continuesASDASDASD!\n");
+      printf("Not everybody said 'yes', so the conversation continues!\n");
       message = send(client_socket2, "The conversation continues!\n", BUFSIZE, 0);
       if(message < 0) {
          fprintf(stderr, "Can't send message\n");
@@ -193,6 +199,7 @@ int main(int argc, char *argv[] ){
 
     printf("Client1 sent the following message:\n%s\n", client_response);
 
+  //"translation"
   
   if((strstr(client_langResponse, "magyar") != NULL)){
     int i = 0;
@@ -254,37 +261,39 @@ int main(int argc, char *argv[] ){
 
     printf("Client2 sent the following message:\n%s\n", client_response2);
 
+    //"translation"
+
     if((strstr(client_langResponse2, "magyar") != NULL)){
     int i = 0;
     while(client_reactionBuffer2[i]){
       client_reactionBuffer2[i] = toupper(client_reactionBuffer2[i]);
       i++;
     }
-  }
-  else{
-    int i = 0;
-    while(client_reactionBuffer2[i]){
-      client_reactionBuffer2[i] = tolower(client_reactionBuffer2[i]);
-      i++;
+    }
+    else{
+     int i = 0;
+     while(client_reactionBuffer2[i]){
+       client_reactionBuffer2[i] = tolower(client_reactionBuffer2[i]);
+       i++;
     }
     
-  }
+    }
 
-  if((strstr(client_langResponse2, "magyar") != NULL)){
-    int i = 0;
-    while(client_response2[i]){
-      client_response2[i] = toupper(client_response2[i]);
-      i++;
+    if((strstr(client_langResponse2, "magyar") != NULL)){
+      int i = 0;
+      while(client_response2[i]){
+        client_response2[i] = toupper(client_response2[i]);
+        i++;
+      }
     }
-  }
-  else{
-    int i = 0;
-    while(client_response2[i]){
-      client_response2[i] = tolower(client_response2[i]);
-      i++;
+    else{
+     int i = 0;
+     while(client_response2[i]){
+       client_response2[i] = tolower(client_response2[i]);
+       i++;
     }
     
-  }
+    }
 
 
     //Send a message and reaction to Client1
@@ -298,13 +307,6 @@ int main(int argc, char *argv[] ){
        fprintf(stderr, "Can't send reaction and/or message\n");
        exit(5);
     }
-    /* message = send(client_socket, strcat(client_reactionBuffer2, client_response2),BUFSIZE, 0);
-    if(message < 0) {
-       fprintf(stderr, "Can't send reaction and/or message\n");
-       exit(5);
-    }*/
-
-
     
   }
 
