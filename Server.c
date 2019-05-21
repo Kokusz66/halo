@@ -112,7 +112,8 @@ int main(int argc, char *argv[] ){
       }else if((strstr(client_langResponse, "MAGYAR")!= NULL)){
         printf("Client1 choosed: MAGYAR\n");
 
-        }else if((strstr(client_langResponse2, "magyar") != NULL)){
+        }
+        if((strstr(client_langResponse2, "magyar") != NULL)){
           printf("Client2 choosed: magyar\n");
         }else{
           printf("Client2 choosed: MAGYAR\n");
