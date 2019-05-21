@@ -16,7 +16,7 @@ int main(int argc, char *argv[] ){
 
   printf("\e[1;1H\e[2J"); //clears the screen on linux
 
-  int network_socket;
+  int network_socket;   //file leiro
   char buffer[BUFSIZE];
   char reactionBuffer[REACTION_BUFSIZE];
   char langResponseBuffer[BUFSIZE];
@@ -30,7 +30,6 @@ int main(int argc, char *argv[] ){
   int reactionMessage;
   int voteMessage;
   char server_response[BUFSIZE];
-  char server_greatingResponse[BUFSIZE];
   char server_langChoose[BUFSIZE];
   char server_voteResponse[BUFSIZE];
 
@@ -40,12 +39,12 @@ int main(int argc, char *argv[] ){
 
 
   //specify an address for the socket
-  struct sockaddr_in server;
-  server.sin_family = AF_INET;
-  server.sin_port = htons(PORT_NO);
+  struct sockaddr_in server;      //socket name (addr) of server
+  server.sin_family = AF_INET;    //adress family
+  server.sin_port = htons(PORT_NO);   //short , network byte order (host to network short)
   server.sin_addr.s_addr = ip;
 
-  //create a socket
+  //create a socket, return value: OK, file descriptor
   network_socket = socket(AF_INET, SOCK_STREAM, 0); //(domain, type, protocoll)
   
   if (network_socket < 0) {

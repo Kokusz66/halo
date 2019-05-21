@@ -15,13 +15,12 @@ int main(int argc, char *argv[] ){
 
   printf("\e[1;1H\e[2J"); //clears the screen on linux
 
-  int server_socket;
+  int server_socket;    //file leirok
   int client_socket;
   int client_socket2;
   
 
   char on = 1;
-  char buffer[BUFSIZE];
   char server_message[BUFSIZE] = "Hello Client1";
   char server_message2[BUFSIZE] = "Hello Client2";
   char server_langChoose[BUFSIZE]= "Choose language: magyar or MAGYAR?";
@@ -42,15 +41,15 @@ int main(int argc, char *argv[] ){
   struct sockaddr_in server_adress;  //socket name (addr) of server
   struct sockaddr_in client;         //socket name of client
   struct sockaddr_in client2;        //socekt name of client
-  server_adress.sin_family = AF_INET;
-  server_adress.sin_port = htons(PORT_NO);
+  server_adress.sin_family = AF_INET;   //adress family
+  server_adress.sin_port = htons(PORT_NO);    //short , network byte order (host to network short)
   server_adress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
   int server_size = sizeof server_adress;
   int client_size = sizeof client_socket;
   int client_size2 = sizeof client_socket2;
 
-  //create a server socket
+  //create a socket, return value: OK, file descriptor
   server_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (server_socket < 0) {
      fprintf(stderr, "Can't create to the socket\n");
@@ -246,12 +245,7 @@ int main(int argc, char *argv[] ){
        fprintf(stderr, "Can't send message\n");
        exit(5);
     }
-    /*message = send(client_socket2, strcat(client_reactionBuffer, client_response),BUFSIZE, 0);
-    if(message < 0) {
-       fprintf(stderr, "Can't send reaction and/or message\n");
-       exit(5);
-    }*/
-
+  
     //Recive greating message and reaction from Client2
     
     recv(client_socket2, &client_reactionBuffer2, sizeof(client_reactionBuffer2), 0);
