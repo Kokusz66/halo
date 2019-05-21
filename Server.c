@@ -44,7 +44,7 @@ int main(int argc, char *argv[] ){
   struct sockaddr_in client2;        //socekt name of client
   server_adress.sin_family = AF_INET;
   server_adress.sin_port = htons(PORT_NO);
-  server_adress.sin_addr.s_addr = INADDR_ANY;
+  server_adress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
   int server_size = sizeof server_adress;
   int client_size = sizeof client_socket;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[] ){
     recv(client_socket2, vote_response2, sizeof(vote_response2), 0);
 
     if((strstr(vote_response, "igen") != NULL) && (strstr(vote_response2, "igen") != NULL)){
-      printf("Everybody voted yes, the conversation is over!\n\n");
+      printf("Everybody voted 'igen', the conversation is over!\n\n");
 
 
       message = send(client_socket2, "The conversation is over!\n", BUFSIZE, 0);
@@ -174,7 +174,7 @@ int main(int argc, char *argv[] ){
          exit(5);
       }
     }else{
-      printf("Not everybody said 'yes', so the conversation continues!\n");
+      printf("No decision was made, the conversation continues!\n");
       message = send(client_socket2, "The conversation continues!\n", BUFSIZE, 0);
       if(message < 0) {
          fprintf(stderr, "Can't send message\n");
