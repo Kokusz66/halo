@@ -40,12 +40,12 @@ int main(int argc, char *argv[] ){
 
   //specify an address for the socket
   struct sockaddr_in server;      //socket name (addr) of server
-  server.sin_family = AF_INET;    //adress family
-  server.sin_port = htons(PORT_NO);   //short , network byte order (host to network short)
+  server.sin_family = AF_INET;    
+  server.sin_port = htons(PORT_NO);   
   server.sin_addr.s_addr = ip;
 
-  //create a socket, return value: OK, file descriptor
-  network_socket = socket(AF_INET, SOCK_STREAM, 0); //(domain, type, protocoll)
+  //create a socket
+  network_socket = socket(AF_INET, SOCK_STREAM, 0); 
   
   if (network_socket < 0) {
     fprintf(stderr, "Can't create to the socket\n");
