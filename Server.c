@@ -41,15 +41,15 @@ int main(int argc, char *argv[] ){
   struct sockaddr_in server_adress;  //socket name (addr) of server
   struct sockaddr_in client;         //socket name of client
   struct sockaddr_in client2;        //socekt name of client
-  server_adress.sin_family = AF_INET;   //adress family
-  server_adress.sin_port = htons(PORT_NO);    //short , network byte order (host to network short)
+  server_adress.sin_family = AF_INET;  
+  server_adress.sin_port = htons(PORT_NO);    
   server_adress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
   int server_size = sizeof server_adress;
   int client_size = sizeof client_socket;
   int client_size2 = sizeof client_socket2;
 
-  //create a socket, return value: OK, file descriptor
+  //create a socket
   server_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (server_socket < 0) {
      fprintf(stderr, "Can't create to the socket\n");
